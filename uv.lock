@@ -698,6 +698,7 @@ dependencies = [
     { name = "nltk" },
     { name = "pandas" },
     { name = "spacy" },
+    { name = "spacy-chunks" },
     { name = "tqdm" },
 ]
 
@@ -707,6 +708,7 @@ requires-dist = [
     { name = "nltk", specifier = ">=3.9.2" },
     { name = "pandas", specifier = ">=3.0.1" },
     { name = "spacy", specifier = ">=3.8.11" },
+    { name = "spacy-chunks", specifier = ">=0.0.2" },
     { name = "tqdm", specifier = ">=4.67.3" },
 ]
 
@@ -791,6 +793,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/23/1f/21812ec34b187ef6ba223389760dfea09bbe27d2b84b553c5205576b4ac2/spacy-3.8.11-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:a2bfe45c0c1530eaabc68f5434c52b1be8df10d5c195c54d4dc2e70cea97dc65", size = 32478557, upload-time = "2025-11-17T20:39:55.826Z" },
     { url = "https://files.pythonhosted.org/packages/f3/16/a0c9174a232dfe7b48281c05364957e2c6d0f80ef26b67ce8d28a49c2d91/spacy-3.8.11-cp314-cp314-win_amd64.whl", hash = "sha256:45d0bbc8442d18dcea9257be0d1ab26e884067e038b1fa133405bf2f20c74edf", size = 14396041, upload-time = "2025-11-17T20:39:58.557Z" },
     { url = "https://files.pythonhosted.org/packages/aa/d0/a6aad5b73d523e4686474b0cfcf46f37f3d7a18765be5c1f56c1dcee4c18/spacy-3.8.11-cp314-cp314-win_arm64.whl", hash = "sha256:90a12961ecc44e0195fd42db9f0ce4aade17e6fe03f8ab98d4549911d9e6f992", size = 13823760, upload-time = "2025-11-17T20:40:00.831Z" },
+]
+
+[[package]]
+name = "spacy-chunks"
+version = "0.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "spacy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/25/c7/216bb21316de1910c3b24a8522da8c4be773b378c5c00e387143fad5d2cb/spacy_chunks-0.0.2.tar.gz", hash = "sha256:6d5b9e4de26ba6e04eff64005b5d854cf94df03bbdcfcf9883f736b9af4bc477", size = 3847, upload-time = "2024-08-14T18:17:02.411Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5b/46/ef383ad3827fe9a74cc768cdebce0e0ea2bc14bdf85ca297ee3a6282e894/spacy_chunks-0.0.2-py3-none-any.whl", hash = "sha256:f9dec0eebdded7bc943539547e6957b62ad1f857ff08e70db1ce89d3cf581261", size = 4158, upload-time = "2024-08-14T18:17:00.552Z" },
 ]
 
 [[package]]
