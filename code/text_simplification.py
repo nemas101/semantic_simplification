@@ -34,17 +34,22 @@ def wordnet_tokenization(text):
 
 def replace_with_hypernym(vocab_list, document):
     """Replaces 'complex' words (defined as words from the C1/C2 readers level from CEFR-J) with their first hypernyms from wordnet"""
-    word_list = [w for w in document]
-    lemma_list = [lemmatizer.lemmatize(word) for word in word_list]
-    for word in document:
+    word_list = [w.text for w in document]
+    # maybe lemmatize for all the verbs?
+    # lemma_list = [lemmatizer.lemmatize(word) for word in word_list]
+    for index, word in enumerate(word_list):
         lemma = lemmatizer.lemmatize(word)
         if lemma in vocab_list:
             synset = wn.synsets(word)
-            hypernym = synset[0].hypernyms()[0]
-            word = hypernym
-            name = word.name()
-            w.text = name.split(".")[0]
-    breakpoint()
+            if len(synset) > 0:
+                hypernym_list = synset[0].hypernyms()
+                if len(hypernym_list) > 0:
+                    hypernym = hypernym_list[0]
+                    word_hypernym_synset = hypernym
+                    name = word_hypernym_synset.name()
+                    new_word = name.split(".")[0]
+                    word_list[index] = new_word    
+    document = " ".join(word_list)
     return document
 
 
@@ -62,11 +67,11 @@ if __name__ == "__main__":
     complex_word_list = list(df_vocab["headword"])
 
     nlp = spacy.load("en_core_web_sm")
-    # doc = nlp(text)
+    doc = nlp(text)
 
     spacy_fy_sentences = spacyfy_text(text)
 
-    hypernym_doc = replace_with_hypernym(complex_word_list, text)
+    hypernym_doc = replace_with_hypernym(complex_word_list, doc)
     breakpoint()
     # wordnet_dict = wordnet_tokenization(text)
 
