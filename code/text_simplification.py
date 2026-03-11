@@ -1,11 +1,11 @@
 import argparse
+
 import pandas as pd
-import nltk
 import spacy
-from nltk import word_tokenize
+from spacy.matcher import Matcher
+from spacy.tokens import Doc
 from nltk.corpus import wordnet as wn
 from nltk.stem import WordNetLemmatizer
-
 from tqdm.auto import tqdm
 
 # if necessary run there once:
@@ -22,14 +22,6 @@ def spacyfy_text(text) -> list[str]:
         sentences.extend([sentence.text for sentence in chunk_spacyfied])
 
     return sentences
-
-
-def wordnet_tokenization(text):
-    wordnet_tokens = {}
-    nltk_words = word_tokenize(text)
-    for word in tqdm(nltk_words):
-        wordnet_tokens[word] = wn.synsets(word)
-    return wordnet_tokens
 
 
 def replace_with_hypernym(vocab_list, document):
@@ -57,6 +49,36 @@ def replace_with_hypernym(vocab_list, document):
     return new_document
 
 
+def find_adjectives_before_nouns(document):
+    """
+    Finds any adjectives in attributive position before a noun
+
+    Input: spacy-document of the text (spacy.tokens.doc.Doc')
+
+    Output: dict of of the adjectives to be replaces (items: adjective and noun, values: only nouns)
+    """
+    pattern_adj_noun = [[{"POS": "ADJ"}, {"POS": "NOUN"}]]
+    pattern_noun = [[{"POS": "ADJ"}]]
+
+    matcher.add("adj_noun", pattern_adj_noun)  # matches all adj-noun combinations
+    matcher.add("only_adj", pattern_noun)  # matches all adjectives
+
+    matches = matcher(document)
+    filtered_adj_matches = {}
+    prev_match = (0, 0, 0)
+
+    for match_id, start, end in matches:
+        if start == prev_match[1]:
+            filtered_adj_matches[document[start: end]] = (document[start +1 : end])
+            # string_id = nlp.vocab.strings[match_id]
+            # span = document[start:end]
+            # print(match_id, string_id, start, end, span.text) #test for the match
+            # print("Filtered Word :", document[start:end-1]) # test for the adjective to be filtered
+            # print(filtered_adj_matches[-1])
+        prev_match = (match_id, start, end)
+    return filtered_adj_matches
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -78,25 +100,28 @@ if __name__ == "__main__":
     complex_word_list = list(c1_vocab["headword"])
     complex_word_list.extend(list(b2_vocab))
 
-    nlp = spacy.load("en_core_web_sm", disable=['tagger', 'ner', 'lemmatizer', 'textcat'])
+    nlp = spacy.load("en_core_web_sm", disable=["ner", "lemmatizer", "textcat"])
+    matcher = Matcher(nlp.vocab)
 
-    nlp.add_pipe("spacy_chunks", last=True, config={
-    "chunking_method": "sentence",
-    "chunk_size": 10,
-    "overlap": 1,
-    "truncate": True
-
-})
+    # nlp.add_pipe(
+    #     "spacy_chunks",
+    #     last=True,
+    #     config={
+    #         "chunking_method": "sentence",
+    #         "chunk_size": 10,
+    #         "overlap": 1,
+    #         "truncate": True,
+    #     },
+    # )
 
     doc = nlp(text)
 
-    # spacy_fy_sentences = spacyfy_text(text)
+    list_adjectives = find_adjectives_before_nouns(doc)
+    breakpoint()
 
     hypernym_doc = replace_with_hypernym(complex_word_list, doc)
-    breakpoint()
 
     with open(f"../texts/{args.text}_simplified.txt", "w") as t:
         t.write(hypernym_doc)
-        
-    # wordnet_dict = wordnet_tokenization(text)
 
+    # wordnet_dict = wordnet_tokenization(text)
