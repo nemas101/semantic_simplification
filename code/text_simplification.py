@@ -1,4 +1,5 @@
 import argparse
+import re
 
 import pandas as pd
 import spacy
@@ -69,14 +70,55 @@ def find_adjectives_before_nouns(document):
 
     for match_id, start, end in matches:
         if start == prev_match[1]:
-            filtered_adj_matches[document[start: end]] = (document[start +1 : end])
+            filtered_adj_matches[document[start:end].text] = document[start + 1 : end].text
             # string_id = nlp.vocab.strings[match_id]
             # span = document[start:end]
             # print(match_id, string_id, start, end, span.text) #test for the match
             # print("Filtered Word :", document[start:end-1]) # test for the adjective to be filtered
             # print(filtered_adj_matches[-1])
         prev_match = (match_id, start, end)
+
+    matcher.remove("adj_noun")  # matches all adj-noun combinations
+    matcher.remove("only_adj")
+
+    # breakpoint()
     return filtered_adj_matches
+
+
+def find_adverbs(document):
+    """
+    Finds any adverbs in a given document
+
+    Input: spacy-document of the text (spacy.tokens.doc.Doc')
+
+    Output: list of of the adverbs to be replaces (list of str)
+    """
+    pattern_adv = [[{"POS": "ADV"}]]
+
+    matcher.add("adv", pattern_adv)  # matches all adverbs
+
+    matches = matcher(document)
+    filtered_adv_matches = {}
+
+    for _, start, end in matches:
+            filtered_adv_matches[document[start:end].text] = ""
+
+    return filtered_adv_matches
+
+def replace_words(document,removal_dict):
+    """Replaces words in a document according to a given removal_dict
+    
+    Input: document (str), removal dict(items: old_string, values: replacement_string)
+    
+    Output: replacement_document(str)"""
+    replacement_document = document
+    print(removal_dict)
+
+    for key, value in removal_dict.items():
+        pattern = r"\b" + re.escape(key) + r"\b"
+        replacement_document = re.sub(pattern, "", replacement_document)
+    return replacement_document
+
 
 
 if __name__ == "__main__":
@@ -116,10 +158,21 @@ if __name__ == "__main__":
 
     doc = nlp(text)
 
-    list_adjectives = find_adjectives_before_nouns(doc)
+
+    dict_adjectives = find_adjectives_before_nouns(doc)
+    list_adverbs = find_adverbs(doc)
+
+    replacement_doc = replace_words(doc.text, dict_adjectives)
+    replacement_doc = replace_words(replacement_doc, list_adverbs)
     breakpoint()
 
-    hypernym_doc = replace_with_hypernym(complex_word_list, doc)
+    new_document = nlp(replacement_doc)
+    hypernym_doc = replace_with_hypernym(complex_word_list, new_document)
+
+
+
+    breakpoint()
+
 
     with open(f"../texts/{args.text}_simplified.txt", "w") as t:
         t.write(hypernym_doc)
