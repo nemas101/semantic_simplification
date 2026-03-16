@@ -35,6 +35,8 @@ def replace_with_hypernym(vocab_list, document):
         if word_text in vocab_list:
             synset = wn.synsets(word_text)
             if len(synset) > 0:
+                # pos = synset[0].pos()
+                # maybe filtering by pos-tags for better hypernyms
                 hypernym_list = synset[0].hypernyms()
                 if len(hypernym_list) > 0:
                     hypernym = hypernym_list[0]
@@ -43,7 +45,9 @@ def replace_with_hypernym(vocab_list, document):
                     new_word = name.split(".")[0]
                     if "_" in new_word:
                         new_word = new_word.replace("_", " ")
-                    new_document = new_document.replace(word_text, new_word)
+                    new_document = re.sub(
+                        word_text + "\b", new_word, new_document
+                    )  # to catch accidental in-word-replacements
     return new_document
 
 
@@ -149,7 +153,6 @@ if __name__ == "__main__":
 
     replacement_doc = replace_words(doc.text, dict_adjectives)
     replacement_doc = replace_words(replacement_doc, list_adverbs)
-
     new_document = nlp(replacement_doc)
     hypernym_doc = replace_with_hypernym(complex_word_list, new_document)
 
