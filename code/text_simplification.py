@@ -1,15 +1,17 @@
 import argparse
 import re
 
+import nltk
 import pandas as pd
 import spacy
-from spacy.matcher import Matcher
-from spacy.tokens import Doc
+from nltk.corpus import stopwords
 from nltk.corpus import wordnet as wn
 from nltk.stem import WordNetLemmatizer
+from spacy.matcher import Matcher
 from tqdm.auto import tqdm
 
 # if necessary run there once:
+# nltk.download('stopwords')
 # nltk.download("punkt_tab")
 # nltk.download("wordnet")
 
@@ -27,14 +29,9 @@ def spacyfy_text(text) -> list[str]:
 
 def replace_with_hypernym(vocab_list, document):
     """Replaces 'complex' words (defined as words from the B2/C1/C2 readers level from CEFR-J) with their first hypernyms from wordnet"""
-    # word_list = [w.text for w in document]
-    # maybe lemmatize for all the verbs?
-    # lemma_list = [lemmatizer.lemmatize(word) for word in word_list]
     new_document = document.text
     for word in tqdm(document):
         word_text = word.text
-        # lemma = lemmatizer.lemmatize(word_text)
-        # if lemma in vocab_list:
         if word_text in vocab_list:
             synset = wn.synsets(word_text)
             if len(synset) > 0:
@@ -70,24 +67,21 @@ def find_adjectives_before_nouns(document):
 
     for match_id, start, end in matches:
         if start == prev_match[1]:
-            filtered_adj_matches[document[start:end].text] = document[start + 1 : end].text
-            # string_id = nlp.vocab.strings[match_id]
-            # span = document[start:end]
-            # print(match_id, string_id, start, end, span.text) #test for the match
-            # print("Filtered Word :", document[start:end-1]) # test for the adjective to be filtered
-            # print(filtered_adj_matches[-1])
+            filtered_adj_matches[document[start:end].text] = document[
+                start + 1 : end
+            ].text
         prev_match = (match_id, start, end)
 
     matcher.remove("adj_noun")  # matches all adj-noun combinations
     matcher.remove("only_adj")
 
-    # breakpoint()
     return filtered_adj_matches
 
 
 def find_adverbs(document):
     """
     Finds any adverbs in a given document
+    Adverbs are then filtered by the stopword-list from spacy because too many "adverbs" are prepositions
 
     Input: spacy-document of the text (spacy.tokens.doc.Doc')
 
@@ -98,27 +92,30 @@ def find_adverbs(document):
     matcher.add("adv", pattern_adv)  # matches all adverbs
 
     matches = matcher(document)
+
+    stops = set(stopwords.words("english"))
     filtered_adv_matches = {}
 
     for _, start, end in matches:
-            filtered_adv_matches[document[start:end].text] = ""
+        filtered_adv_matches[document[start:end].text] = ""
+    filtered_adv_matches_without_stops = {
+        item: value for item, value in filtered_adv_matches.items() if item not in stops
+    }
+    return filtered_adv_matches_without_stops
 
-    return filtered_adv_matches
 
-def replace_words(document,removal_dict):
+def replace_words(document, removal_dict):
     """Replaces words in a document according to a given removal_dict
-    
+
     Input: document (str), removal dict(items: old_string, values: replacement_string)
-    
+
     Output: replacement_document(str)"""
     replacement_document = document
-    print(removal_dict)
-
+    # print(removal_dict) # for testing purposes
     for key, value in removal_dict.items():
         pattern = r"\b" + re.escape(key) + r"\b"
-        replacement_document = re.sub(pattern, "", replacement_document)
+        replacement_document = re.sub(pattern, value, replacement_document)
     return replacement_document
-
 
 
 if __name__ == "__main__":
@@ -145,36 +142,16 @@ if __name__ == "__main__":
     nlp = spacy.load("en_core_web_sm", disable=["ner", "lemmatizer", "textcat"])
     matcher = Matcher(nlp.vocab)
 
-    # nlp.add_pipe(
-    #     "spacy_chunks",
-    #     last=True,
-    #     config={
-    #         "chunking_method": "sentence",
-    #         "chunk_size": 10,
-    #         "overlap": 1,
-    #         "truncate": True,
-    #     },
-    # )
-
     doc = nlp(text)
-
 
     dict_adjectives = find_adjectives_before_nouns(doc)
     list_adverbs = find_adverbs(doc)
 
     replacement_doc = replace_words(doc.text, dict_adjectives)
     replacement_doc = replace_words(replacement_doc, list_adverbs)
-    breakpoint()
 
     new_document = nlp(replacement_doc)
     hypernym_doc = replace_with_hypernym(complex_word_list, new_document)
 
-
-
-    breakpoint()
-
-
     with open(f"../texts/{args.text}_simplified.txt", "w") as t:
         t.write(hypernym_doc)
-
-    # wordnet_dict = wordnet_tokenization(text)
