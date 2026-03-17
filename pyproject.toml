@@ -11,4 +11,5 @@ dependencies = [
     "en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
     "tqdm>=4.67.3",
     "spacy-chunks>=0.0.2",
+    "textstat>=0.7.13",
 ]
