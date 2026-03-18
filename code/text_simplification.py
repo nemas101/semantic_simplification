@@ -8,6 +8,7 @@ from nltk.corpus import stopwords
 from nltk.corpus import wordnet as wn
 from spacy.matcher import Matcher
 from tqdm.auto import tqdm
+from hypernymReplacement import replace_with_hypernym
 
 # if necessary run there once:
 # nltk.download('stopwords')
@@ -26,36 +27,7 @@ def spacyfy_text(text: str) -> list[str]:
     return sentences
 
 
-def replace_with_hypernym(vocab_list: list, document: spacy.tokens.doc.Doc) -> str:
-    """Replaces 'complex' words (defined as words from the B2/C1/C2 readers level from CEFR-J) with their first hypernyms from wordnet
-
-    Input: document from spacy (spacy.tokens.doc.Doc)
-
-    Output: document with complex words replaced with hypernyms, type string
-    """
-    new_document = document.text
-    for word in tqdm(document):
-        word_text = word.text
-        if word_text in vocab_list:
-            synset = wn.synsets(word_text)
-            if len(synset) > 0:
-                # pos = synset[0].pos()
-                # maybe filtering by pos-tags for better hypernyms
-                hypernym_list = synset[0].hypernyms()
-                if len(hypernym_list) > 0:
-                    hypernym = hypernym_list[0]
-                    word_hypernym_synset = hypernym
-                    name = word_hypernym_synset.name()
-                    new_word = name.split(".")[0]
-                    if "_" in new_word:
-                        new_word = new_word.replace("_", " ")
-                    new_document = re.sub(
-                        word_text + "\b", new_word, new_document
-                    )  # to catch accidental in-word-replacements
-    return new_document
-
-
-def find_adjectives_before_nouns(document: spacy.tokens.doc.Doc):
+def find_adjectives_before_nouns(document: spacy.tokens.doc.Doc) -> dict:
     """
     Finds any adjectives in attributive position before a noun
 
@@ -86,7 +58,7 @@ def find_adjectives_before_nouns(document: spacy.tokens.doc.Doc):
     return filtered_adj_matches
 
 
-def find_adverbs(document: spacy.tokens.doc.Doc):
+def find_adverbs(document: spacy.tokens.doc.Doc) -> dict:
     """
     Finds any adverbs in a given document
     Adverbs are then filtered by the stopword-list from spacy because too many "adverbs" are prepositions
@@ -112,7 +84,7 @@ def find_adverbs(document: spacy.tokens.doc.Doc):
     return filtered_adv_matches_without_stops
 
 
-def replace_words(document: str, removal_dict: dict):
+def replace_words(document: str, removal_dict: dict) -> str:
     """Replaces words in a document according to a given removal_dict
 
     Input: document (str), removal dict(items: old_string, values: replacement_string)
@@ -126,7 +98,7 @@ def replace_words(document: str, removal_dict: dict):
     return replacement_document
 
 
-def clean_document(text: str):
+def clean_document(text: str) -> str:
     single_whitespaces = re.sub(r" {2,}", " ", text)
     fullstop_replacement = re.sub(
         r"(( )*(\.) )+", ". ", single_whitespaces
