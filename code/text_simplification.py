@@ -6,7 +6,6 @@ import pandas as pd
 import spacy
 from nltk.corpus import stopwords
 from nltk.corpus import wordnet as wn
-from nltk.stem import WordNetLemmatizer
 from spacy.matcher import Matcher
 from tqdm.auto import tqdm
 
@@ -16,7 +15,7 @@ from tqdm.auto import tqdm
 # nltk.download("wordnet")
 
 
-def spacyfy_text(text) -> list[str]:
+def spacyfy_text(text: str) -> list[str]:
     n = 99999  # set for spacys maximal text limit
     chunks = [text[i : i + n] for i in range(0, len(text), n)]
     sentences = []
@@ -27,8 +26,13 @@ def spacyfy_text(text) -> list[str]:
     return sentences
 
 
-def replace_with_hypernym(vocab_list, document):
-    """Replaces 'complex' words (defined as words from the B2/C1/C2 readers level from CEFR-J) with their first hypernyms from wordnet"""
+def replace_with_hypernym(vocab_list: list, document: spacy.tokens.doc.Doc) -> str:
+    """Replaces 'complex' words (defined as words from the B2/C1/C2 readers level from CEFR-J) with their first hypernyms from wordnet
+
+    Input: document from spacy (spacy.tokens.doc.Doc)
+
+    Output: document with complex words replaced with hypernyms, type string
+    """
     new_document = document.text
     for word in tqdm(document):
         word_text = word.text
@@ -51,7 +55,7 @@ def replace_with_hypernym(vocab_list, document):
     return new_document
 
 
-def find_adjectives_before_nouns(document):
+def find_adjectives_before_nouns(document: spacy.tokens.doc.Doc):
     """
     Finds any adjectives in attributive position before a noun
 
@@ -82,7 +86,7 @@ def find_adjectives_before_nouns(document):
     return filtered_adj_matches
 
 
-def find_adverbs(document):
+def find_adverbs(document: spacy.tokens.doc.Doc):
     """
     Finds any adverbs in a given document
     Adverbs are then filtered by the stopword-list from spacy because too many "adverbs" are prepositions
@@ -108,7 +112,7 @@ def find_adverbs(document):
     return filtered_adv_matches_without_stops
 
 
-def replace_words(document, removal_dict):
+def replace_words(document: str, removal_dict: dict):
     """Replaces words in a document according to a given removal_dict
 
     Input: document (str), removal dict(items: old_string, values: replacement_string)
@@ -122,13 +126,23 @@ def replace_words(document, removal_dict):
     return replacement_document
 
 
+def clean_document(text: str):
+    single_whitespaces = re.sub(r" {2,}", " ", text)
+    fullstop_replacement = re.sub(
+        r"(( )*(\.) )+", ". ", single_whitespaces
+    )  # remove whitespaces around full stops
+    comma_replacement = re.sub(
+        r"(( )*(,) )+", ", ", fullstop_replacement
+    )  # remove doubled commas and superfluous whitespaces
+    return comma_replacement
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--text", required=True, help="Name of the text in the texts_folder"
     )
     args = parser.parse_args()
-    lemmatizer = WordNetLemmatizer()
 
     with open(f"../texts/{args.text}.txt", "r") as f:
         text = f.read()
@@ -151,10 +165,14 @@ if __name__ == "__main__":
     dict_adjectives = find_adjectives_before_nouns(doc)
     list_adverbs = find_adverbs(doc)
 
+    # remove adjectives and adverbs
     replacement_doc = replace_words(doc.text, dict_adjectives)
     replacement_doc = replace_words(replacement_doc, list_adverbs)
+    # replace complex words
     new_document = nlp(replacement_doc)
     hypernym_doc = replace_with_hypernym(complex_word_list, new_document)
+    # clean document
+    clean_document = clean_document(hypernym_doc)
 
     with open(f"../texts/{args.text}_simplified.txt", "w") as t:
         t.write(hypernym_doc)
