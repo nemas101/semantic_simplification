@@ -34,7 +34,6 @@ def remove_newlines(text_lines):
     cleaned_sentences = [sentence.replace("\n", " ") for sentence in sentences]
     dotted_sentences = [sentence + "." for sentence in cleaned_sentences]
     dotted_sentences = dotted_sentences[:-1]
-    breakpoint()
     return dotted_sentences
 
 if __name__ == "__main__":
@@ -51,7 +50,6 @@ if __name__ == "__main__":
     beg_text = delete_beginning(cleaned_lines)
     clean_text = delete_end(beg_text)
     clean_text = remove_newlines(clean_text)
-    breakpoint()
 
     with open(f"../texts/{args.text}_preprocessed.txt", "w") as f:
         f.writelines(clean_text)
