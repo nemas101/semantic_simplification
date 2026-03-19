@@ -1,7 +1,7 @@
 import argparse
 import re
+import os
 
-import nltk
 import pandas as pd
 import spacy
 from nltk.corpus import stopwords
@@ -9,7 +9,6 @@ from nltk.corpus import wordnet as wn
 from spacy.matcher import Matcher
 from tqdm.auto import tqdm
 from hypernymReplacement import replace_with_hypernym
-
 # if necessary run there once:
 # nltk.download('stopwords')
 # nltk.download("punkt_tab")
@@ -116,7 +115,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    with open(f"../texts/{args.text}.txt", "r") as f:
+    with open(f"../results/{args.text}-preprocessed.txt", "r") as f:
         text = f.read()
 
     c1_vocab = pd.read_csv("octanove-vocabulary-profile-c1c2-1.0.csv")
@@ -145,7 +144,10 @@ if __name__ == "__main__":
     hypernym_doc = replace_with_hypernym(complex_word_list, new_document)
     # clean document
     clean_document = clean_document(hypernym_doc)
-    
 
-    with open(f"../texts/{args.text}_simplified.txt", "w") as t:
-        t.write(hypernym_doc)
+    results_path = "../results"
+    if not os.path.isdir(results_path):
+        os.makedirs(results_path)
+
+    with open(f"../results/{args.text.split("-")[0]}-simplified.txt", "w") as t:
+        t.write(clean_document)
