@@ -1,5 +1,6 @@
 import argparse
 import re
+import os
 
 from tqdm.auto import tqdm
 
@@ -51,5 +52,10 @@ if __name__ == "__main__":
     clean_text = delete_end(beg_text)
     clean_text = remove_newlines(clean_text)
 
-    with open(f"../texts/{args.text}_preprocessed.txt", "w") as f:
+
+    results_path = "../results"
+    if not os.path.isdir(results_path):
+        os.makedirs(results_path)
+
+    with open(f"../results/{args.text}-preprocessed.txt", "w") as f:
         f.writelines(clean_text)
