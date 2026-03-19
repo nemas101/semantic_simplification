@@ -129,7 +129,7 @@ if __name__ == "__main__":
     complex_word_list = list(c1_vocab["headword"])
     complex_word_list.extend(list(b2_vocab))
 
-    nlp = spacy.load("en_core_web_sm", disable=["ner", "lemmatizer", "textcat"])
+    nlp = spacy.load("en_core_web_md", disable=["ner", "lemmatizer", "textcat"])
     matcher = Matcher(nlp.vocab)
 
     doc = nlp(text)
@@ -145,6 +145,7 @@ if __name__ == "__main__":
     hypernym_doc = replace_with_hypernym(complex_word_list, new_document)
     # clean document
     clean_document = clean_document(hypernym_doc)
+    
 
     with open(f"../texts/{args.text}_simplified.txt", "w") as t:
         t.write(hypernym_doc)

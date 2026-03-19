@@ -12,18 +12,21 @@ pos_tag_dict = {'NOUN':'n',
                 'ADV' :'r'}
 
 # create filtered synsets
-def find_synsets(word:spacy.tokens.token.Token, pos_tag_dict: dict):
+def get_synsets(word:spacy.tokens.token.Token, pos_tag_dict: dict):
+    print(word.text)
     pos_tag= pos_tag_dict[word.pos_]
     wordnet_synsets = wn.synsets(word.text, pos=pos_tag)
     return wordnet_synsets
 
-# create hypernyms
-def find_best_synset(sentence:spacy.tokens.span.Span, word:spacy.tokens.token.Token, pos_tag_dict: dict):
-    wordnet_synsets = find_synsets(word, pos_tag_dict)
-    return wordnet_synsets
-
-# filter out best solution
-
+# filter out best synset
+def find_best_synset(document: spacy.tokens.doc.Doc, sentence:spacy.tokens.span.Span, list_of_synsets):
+    synset_names = [synset.name().split(".")[0] for synset in list_of_synsets]
+    synset_vocab = [document.vocab[name] for name in synset_names]
+    similarities = [sentence.similarity(name) for name in synset_vocab]
+    max_sim = max(similarities)
+    synset_index = similarities.index(max_sim)
+    best_synset = list_of_synsets[synset_index]
+    return best_synset
 
 
 
@@ -47,19 +50,18 @@ def replace_with_hypernym(vocab_list: list, document: spacy.tokens.doc.Doc) -> s
             word_text = word.text
             if word_text in vocab_list:
                 # implementation of empty snysets
-                right_synsets = find_best_synset(sentence, word, pos_tag_dict)
-                # maybe filtering by pos-tags for better hypernyms
-                breakpoint()
-                hypernym_list = right_synsets[0].hypernyms()
-                if len(hypernym_list) > 0:
-                    hypernym = hypernym_list[0]
-                    word_hypernym_synset = hypernym
-                    name = word_hypernym_synset.name()
-                    new_word = name.split(".")[0]
-                    if "_" in new_word:
-                        new_word = new_word.replace("_", " ")
-                    new_document = re.sub(
-                        word_text + "\b", new_word, new_document
+                synset_list = get_synsets(word, pos_tag_dict)
+                if len(synset_list) > 0:
+                    right_synset = find_best_synset(document, sentence, synset_list)
+                    hypernym_list = right_synset.hypernyms()
+                    if len(hypernym_list) > 0:
+                        right_hypernym = find_best_synset(document, sentence, hypernym_list)
+                        name = right_hypernym.name()
+                        new_word = name.split(".")[0]
+                        if "_" in new_word:
+                            new_word = new_word.replace("_", " ")
+                        new_document = re.sub(
+                            word_text + "\b", new_word, new_document
                     )  # to catch accidental in-word-replacements
     breakpoint()
     return new_document
