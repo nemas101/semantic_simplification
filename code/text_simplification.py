@@ -5,7 +5,6 @@ import os
 import pandas as pd
 import spacy
 from nltk.corpus import stopwords
-from nltk.corpus import wordnet as wn
 from spacy.matcher import Matcher
 from tqdm.auto import tqdm
 from hypernymReplacement import replace_with_hypernym
