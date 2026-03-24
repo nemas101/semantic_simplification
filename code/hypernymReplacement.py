@@ -2,7 +2,7 @@ import re
 
 import spacy
 from nltk.corpus import wordnet as wn
-from tqdm.auto import tqdm
+# from tqdm.auto import tqdm
 
 
 
@@ -48,21 +48,19 @@ def replace_with_hypernym(vocab_list: list, document: spacy.tokens.doc.Doc) -> s
             if word_text in vocab_list:
                 # implementation of empty snysets
                 synset_list = get_synsets(word, pos_tag_dict)
-                print(synset_list)
-                if len(synset_list) > 0:
+                if synset_list:
                     right_synset = find_best_synset(document, sentence, synset_list)
                     hypernym_list = right_synset.hypernyms()
-                    print(hypernym_list)
-                    if len(hypernym_list) > 0:
+                    if hypernym_list:
                         right_hypernym = find_best_synset(document, sentence, hypernym_list)
                         name = right_hypernym.name()
                         new_word = name.split(".")[0]
                         if "_" in new_word:
                             new_word = new_word.replace("_", " ")
-                        print(word_text, " => ", new_word)
+                        # print(word_text, " => ", new_word, "\nSentence: ", sentence)
                         new_document = re.sub(
-                            word_text + "\b", new_word, new_document
-                    )  # to catch accidental in-word-replacements
+                            word.text + r"\b", new_word, new_document
+                            )  # to catch accidental in-word-replacements
     breakpoint()
     return new_document
 
