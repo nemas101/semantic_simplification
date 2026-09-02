@@ -66,10 +66,11 @@ if __name__ == "__main__":
         beg_text = delete_beginning(cleaned_lines)
         clean_text = delete_end(beg_text)
         clean_text = remove_newlines(clean_text)
+        short_text = clean_text[100:300]
 
         preprocessed_path = "text/preprocessed"
         if not os.path.isdir(preprocessed_path):
             os.makedirs(preprocessed_path)
 
         with open(f"text/preprocessed/{text.split(".txt")[0]}.txt", "w") as f:
-            f.writelines(clean_text)
+            f.writelines(short_text)

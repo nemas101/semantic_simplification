@@ -57,7 +57,7 @@ def replace_with_hypernym(vocab_list: list, document: spacy.tokens.doc.Doc) -> s
             word_text = word.text
             if word_text in vocab_list:
                 # implementation of empty snysets
-                # print(word_text)
+                # print(word_text)  
                 synset_list = get_synsets(word, pos_tag_dict)
                 if synset_list:
                     right_synset = find_best_synset(document, sentence, synset_list)
@@ -65,7 +65,6 @@ def replace_with_hypernym(vocab_list: list, document: spacy.tokens.doc.Doc) -> s
                     if hypernym_list:
                         right_hypernym = alternate_best_hypernym(right_synset)
                         right_hypernym2 = find_best_synset(document, sentence, hypernym_list)
-                        print("not matching" if right_hypernym2 != right_hypernym else "")
                         name = right_hypernym.name()
                         new_word = name.split(".")[0]
                         if "_" in new_word:
@@ -74,6 +73,5 @@ def replace_with_hypernym(vocab_list: list, document: spacy.tokens.doc.Doc) -> s
                         new_document = re.sub(
                             word.text + r"\b", new_word, new_document
                             )  # to catch accidental in-word-replacements
-    breakpoint()
     return new_document
 
