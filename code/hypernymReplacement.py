@@ -24,7 +24,17 @@ def find_best_synset(document: spacy.tokens.doc.Doc, sentence:spacy.tokens.span.
     max_sim = max(similarities)
     synset_index = similarities.index(max_sim)
     best_synset = list_of_synsets[synset_index]
+    # print("find_best_synset: ", best_synset, max_sim)
     return best_synset
+
+def alternate_best_hypernym(synset):
+    hypernyms = synset.hypernyms()
+    similarities = [synset.wup_similarity(hypernym) for hypernym in hypernyms]
+    max_sim = max(similarities)
+    synset_index = similarities.index(max_sim)
+    best_hypernym = hypernyms[synset_index]
+    # print("alternate_best_hypernym: ", best_hypernym, max_sim)
+    return best_hypernym
 
 
 
@@ -47,12 +57,15 @@ def replace_with_hypernym(vocab_list: list, document: spacy.tokens.doc.Doc) -> s
             word_text = word.text
             if word_text in vocab_list:
                 # implementation of empty snysets
+                # print(word_text)
                 synset_list = get_synsets(word, pos_tag_dict)
                 if synset_list:
                     right_synset = find_best_synset(document, sentence, synset_list)
                     hypernym_list = right_synset.hypernyms()
                     if hypernym_list:
-                        right_hypernym = find_best_synset(document, sentence, hypernym_list)
+                        right_hypernym = alternate_best_hypernym(right_synset)
+                        right_hypernym2 = find_best_synset(document, sentence, hypernym_list)
+                        print("not matching" if right_hypernym2 != right_hypernym else "")
                         name = right_hypernym.name()
                         new_word = name.split(".")[0]
                         if "_" in new_word:

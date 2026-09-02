@@ -1,4 +1,5 @@
 import argparse
+import os
 
 import pandas as pd
 import textstat
@@ -56,14 +57,23 @@ def scoring_readability(original_text, preprocessed_text):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--text", required=True, help="Name of the text in the texts_folder"
+        "--text",
+        required=False,
+        help="Give name of the title in the text folder, defaults to all in the text folder",
+        default="all"
+
     )
     args = parser.parse_args()
 
-    with open(f"../texts/{args.text}_preprocessed.txt", "r") as f:
+    if args.text == "all":
+        texts = os.listdir("../text/raw")
+    else:
+        texts = args.text.split()
+
+    with open(f"text/{args.text}_prep.txt", "r") as f:
         original_text = f.read()
 
-    with open(f"../texts/{args.text}_preprocessed_simplified.txt", "r") as f:
+    with open(f"text/{args.text}_prep_simplified.txt", "r") as f:
         preprocessed_text = f.read()
 
     scores = scoring_readability(original_text, preprocessed_text)

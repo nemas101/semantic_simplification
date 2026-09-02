@@ -110,43 +110,56 @@ def clean_document(text: str) -> str:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--text", required=True, help="Name of the text in the texts_folder"
+        "--text",
+        required=False,
+        help="Give name of the title in the text folder, defaults to all in the text folder",
+        default="all"
+
     )
     args = parser.parse_args()
 
-    with open(f"../results/{args.text}-preprocessed.txt", "r") as f:
-        text = f.read()
+    if args.text == "all":
+        texts = os.listdir("text/preprocessed")
+    else:
+        texts = args.text.split()
 
-    c1_vocab = pd.read_csv("octanove-vocabulary-profile-c1c2-1.0.csv")
-    simple_vocab_list = pd.read_csv("cefrj-vocabulary-profile-1.5.csv")
+    c1_vocab = pd.read_csv("code/octanove-vocabulary-profile-c1c2-1.0.csv")
+    simple_vocab_list = pd.read_csv("code/cefrj-vocabulary-profile-1.5.csv")
     b2_vocab = simple_vocab_list[simple_vocab_list["CEFR"] == "B2"]["headword"]
 
     # word lists gotten from https://raw.githubusercontent.com/openlanguageprofiles/olp-en-cefrj/refs/heads/master/cefrj-vocabulary-profile-1.5.csv
     # https://github.com/openlanguageprofiles/olp-en-cefrj
-
     complex_word_list = list(c1_vocab["headword"])
     complex_word_list.extend(list(b2_vocab))
 
     nlp = spacy.load("en_core_web_md", disable=["ner", "lemmatizer", "textcat"])
     matcher = Matcher(nlp.vocab)
 
-    doc = nlp(text)
+    for text in tqdm(texts):
+        with open(f"text/preprocessed/{text}", "r") as f:
+            text = f.read()
 
-    dict_adjectives = find_adjectives_before_nouns(doc)
-    list_adverbs = find_adverbs(doc)
 
-    # remove adjectives and adverbs
-    replacement_doc = replace_words(doc.text, dict_adjectives)
-    replacement_doc = replace_words(replacement_doc, list_adverbs)
-    # replace complex words
-    new_document = nlp(replacement_doc)
-    hypernym_doc = replace_with_hypernym(complex_word_list, new_document)
-    # clean document
-    clean_document = clean_document(hypernym_doc)
+        doc = nlp(text)
 
-    results_path = "../results"
-    if not os.path.isdir(results_path):
-        os.makedirs(results_path)
+        breakpoint()
+        # TODO HIER weitermachen
 
-    with open(f"../results/{args.text.split("-")[0]}-simplified.txt", "w") as t:
-        t.write(clean_document)
+        dict_adjectives = find_adjectives_before_nouns(doc)
+        list_adverbs = find_adverbs(doc)
+
+        # remove adjectives and adverbs
+        replacement_doc = replace_words(doc.text, dict_adjectives)
+        replacement_doc = replace_words(replacement_doc, list_adverbs)
+        # replace complex words
+        new_document = nlp(replacement_doc)
+        hypernym_doc = replace_with_hypernym(complex_word_list, new_document)
+        # clean document
+        clean_document = clean_document(hypernym_doc)
+
+        results_path = "/results"
+        if not os.path.isdir(results_path):
+            os.makedirs(results_path)
+
+        with open(f"results/{text.split(".txt")[0]}-simplified.txt", "w") as t:
+            t.write(clean_document)
