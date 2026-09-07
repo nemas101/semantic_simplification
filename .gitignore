@@ -5,8 +5,11 @@ build/
 dist/
 wheels/
 *.egg-info
-text/
 
 # Virtual environments
 .venv
 
+# Other files
+text/
+results/
+*.md

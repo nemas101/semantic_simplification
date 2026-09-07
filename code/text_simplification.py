@@ -91,20 +91,29 @@ def replace_words(document: str, removal_dict: dict) -> str:
     return replacement_document
 
 
-def clean_document(text: str) -> str:
+def clean_whitespaces(text: str) -> str:
     """Cleans the document of whitespaces and doubled commas"""
     single_whitespaces = re.sub(r" {2,}", " ", text)
 
     # remove whitespaces around full stops
-    fullstop_replacement = re.sub(
-        r"(( )*(\.) )+", ". ", single_whitespaces
-    )
+    fullstop_replacement = re.sub(r"(( )*(\.) )+", ". ", single_whitespaces)
     # remove doubled commas and superfluous whitespaces
-    comma_replacement = re.sub(
-        r"(( )*(,) )+", ", ", fullstop_replacement
-    )
+    comma_replacement = re.sub(r"(( )*(,) )+", ", ", fullstop_replacement)
 
     return comma_replacement
+
+
+def clean_determiners(text: str) -> str:
+    pattern_a = re.compile(r" a(?= ([aeiou]))", flags=re.MULTILINE)
+    pattern_an = re.compile(r" an(?= ([^aeiou]))", flags=re.MULTILINE)
+
+    sub_a = " an"
+    sub_an = " a"
+
+    text_no_a = pattern_a.sub(sub_a, text)
+    text_clean = pattern_an.sub(sub_an, text_no_a)
+
+    return text_clean
 
 
 if __name__ == "__main__":
@@ -131,7 +140,7 @@ if __name__ == "__main__":
     complex_word_list = list(c1_vocab["headword"])
     complex_word_list.extend(list(b2_vocab))
 
-    nlp = spacy.load("en_core_web_md", disable=["ner", "lemmatizer", "textcat"])
+    nlp = spacy.load("en_core_web_lg", disable=["ner", "lemmatizer", "textcat"])
     matcher = Matcher(nlp.vocab)
 
     for text in tqdm(texts):
@@ -150,8 +159,8 @@ if __name__ == "__main__":
         new_document = nlp(replacement_doc)
         hypernym_doc = replace_with_hypernym(complex_word_list, new_document)
         # clean document
-        clean_document = clean_document(hypernym_doc)
-        breakpoint()
+        clean_document = clean_whitespaces(hypernym_doc)
+        clean_document = clean_determiners(clean_document)
 
         results_path = "results"
         if not os.path.isdir(results_path):
