@@ -162,9 +162,9 @@ if __name__ == "__main__":
         clean_document = clean_whitespaces(hypernym_doc)
         clean_document = clean_determiners(clean_document)
 
-        results_path = "results"
+        results_path = "results/text"
         if not os.path.isdir(results_path):
             os.makedirs(results_path)
 
-        with open(f"results/{text.split('.txt')[0]}-simplified.txt", "w") as t:
+        with open(f"results/text/{text.split('.txt')[0]}-simplified.txt", "w") as t:
             t.write(clean_document)

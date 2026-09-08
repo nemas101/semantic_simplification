@@ -26,9 +26,13 @@ def find_best_synset(
     # remove words that have no vector (are not in vocabulary)
     synset_vocab = [item for item in synset_vocab if item.has_vector]
     similarities = [sentence.similarity(name) for name in synset_vocab]
-    max_sim = max(similarities)
-    synset_index = similarities.index(max_sim)
-    best_synset = list_of_synsets[synset_index]
+    # if none of the similarities can be computed, choose first in synset
+    if similarities:
+        max_sim = max(similarities)
+        synset_index = similarities.index(max_sim)
+        best_synset = list_of_synsets[synset_index]
+    else:
+        best_synset = list_of_synsets[0]
     # print("find_best_synset: ", best_synset, max_sim)
     return best_synset
 
