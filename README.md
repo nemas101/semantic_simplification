@@ -1,5 +1,11 @@
 # semantic_simplification
 
+### 0. Setup
+Install uv from [here](https://docs.astral.sh/uv/getting-started/installation/)
+
+Install dependencies via:
+```uv sync```
+
 ### 1. Download data
 Download the data from gutenberg.org via `download_gutenberg.py`. If run with no arguments it will download a list of 100 books from the gutenberg top 100 engisch book list (list assembled at 14.07.25).
 
