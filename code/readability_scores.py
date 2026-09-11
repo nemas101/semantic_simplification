@@ -1,11 +1,16 @@
+"""Creates a file with all readability scores of the project
+Inputs are the original and the preprocessed texts
+Output is a json file with the readability (and embedding) scores
+"""
+
 import argparse
 import os
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+import spacy
 import textstat
 from tqdm import tqdm
-import spacy
 
 
 def scoring_embedding(text: str) -> float:
@@ -34,11 +39,11 @@ def scoring_embedding(text: str) -> float:
         if not token.is_stop and not token.is_punct and not token.is_space
     ]
     vectors_stop_punct = [token.vector for token in filtered_stop_punct]
-    mean_stop_punct = np.average(vectors_stop_punct)
+    mean_filtered = np.average(vectors_stop_punct)
     scores = {}
     scores["mean_simple"] = mean_simple
     scores["mean_alpha"] = mean_all_filters
-    scores["mean_filtered"] = mean_stop_punct
+    scores["mean_filtered"] = mean_filtered
     return scores
 
 
@@ -87,21 +92,20 @@ if __name__ == "__main__":
     raw_texts = []
     new_texts = []
     titles = []
-    scores = []
-    mean_simple_list = []
-    mean_alpha_list = []
-    mean_filtered_list = []
-    new_mean_simple_list = []
-    new_mean_alpha_list = []
-    new_mean_filtered_list = []
-    embedding_dict = {
-        "mean_simple": mean_simple_list,
-        "mean_alpha": mean_alpha_list,
-        "mean_filtered": mean_filtered_list,
-        "new_mean_simple": new_mean_simple_list,
-        "new_mean_alpha": new_mean_alpha_list,
-        "new_mean_filtered": new_mean_filtered_list,
-    }
+    # mean_simple_list = []
+    # mean_alpha_list = []
+    # mean_filtered_list = []
+    # new_mean_simple_list = []
+    # new_mean_alpha_list = []
+    # new_mean_filtered_list = []
+    # embedding_dict = {
+    #     "mean_simple": mean_simple_list,
+    #     "mean_alpha": mean_alpha_list,
+    #     "mean_filtered": mean_filtered_list,
+    #     "mean_simple_new": new_mean_simple_list,
+    #     "mean_alpha_new": new_mean_alpha_list,
+    #     "mean_filtered_ew": new_mean_filtered_list,
+    # }
     dict_list = []
 
     for text in tqdm(texts):
@@ -118,82 +122,36 @@ if __name__ == "__main__":
         score_dict = {}
         score_dict["original_text"] = original_text
         score_dict["simplified_text"] = simplified_text
-        if args.method == "all":
-            #readability
-            readability_scores_old = scoring_readability(original_text)
-            readability_scores_new = scoring_readability(simplified_text)
-            new_readability_scores = [
-                "new_flesch_reading_ease",
-                "new_flesch_kincaid_grade",
-                "new_smog_index",
-                "new_coleman_liau_index",
-                "new_automated_readability_index",
-                "new_dale_chall_readability_score",
-            ]
 
-            readability_scores_new = dict(zip(new_readability_scores, list(readability_scores_new.values())))
-            score_dict.update(readability_scores_old)
-            score_dict.update(readability_scores_new)
+        #readability
+        readability_scores_old = scoring_readability(original_text)
+        readability_scores_new = scoring_readability(simplified_text)
+        new_readability_scores = [
+            "flesch_reading_ease_new",
+            "flesch_kincaid_grade_new",
+            "smog_index_new",
+            "coleman_liau_index_new",
+            "automated_readability_index_new",
+            "dale_chall_readability_score_new",
+        ]
 
-            # embedding
-            embeddings_old = scoring_embedding(original_text)
-            embeddings_new = scoring_embedding(simplified_text)
-            new_embedding_scores = [
-                "new_mean_simple",
-                "new_mean_alpha",
-                "new_mean_filtered",
-            ]
-            embeddings_new = dict(zip(new_embedding_scores, list(embeddings_new.values())))
-            score_dict.update(embeddings_old)
-            score_dict.update(embeddings_new)
+        readability_scores_new = dict(zip(new_readability_scores, list(readability_scores_new.values())))
+        score_dict.update(readability_scores_old)
+        score_dict.update(readability_scores_new)
+
+        # embedding
+        embeddings_old = scoring_embedding(original_text)
+        embeddings_new = scoring_embedding(simplified_text)
+        new_embedding_scores = [
+            "mean_simple_new",
+            "mean_alpha_new",
+            "mean_filtered_new",
+        ]
+        embeddings_new = dict(zip(new_embedding_scores, list(embeddings_new.values())))
+        score_dict.update(embeddings_old)
+        score_dict.update(embeddings_new)
 
         dict_list.append(score_dict)
 
-        # if args.method == "readability":
-        #     red_scores = scoring_readability(original_text)
-        #     scores.append(red_scores)
-
-        # elif args.method == "semantic_embedding":
-        #     mean_simple, mean_all_filters, mean_stop_punct = scoring_embedding(simplified_text)
-        #     mean_simple_list.append(mean_simple)
-        #     mean_alpha_list.append(mean_all_filters)
-        #     mean_filtered_list.append(mean_stop_punct)
-        #     new_mean_simple, new_mean_all_filters, new_mean_stop_punct = scoring_embedding(simplified_text)
-        #     new_mean_simple_list.append(new_mean_simple)
-        #     new_mean_alpha_list.append(new_mean_all_filters)
-        #     new_mean_filtered_list.append(new_mean_stop_punct)
-
-        # else:
-        #     red_scores = scoring_readability(original_text)
-
-        #     mean_simple, mean_all_filters, mean_stop_punct = scoring_embedding(simplified_text)
-        #     mean_simple_list.append(mean_simple)
-        #     mean_alpha_list.append(mean_all_filters)
-        #     mean_filtered_list.append(mean_stop_punct)
-        #     new_mean_simple, new_mean_all_filters, new_mean_stop_punct = scoring_embedding(simplified_text)
-        #     new_mean_simple_list.append(new_mean_simple)
-        #     new_mean_alpha_list.append(new_mean_all_filters)
-        #     new_mean_filtered_list.append(new_mean_stop_punct)
-
-        # match args.method:
-        #     case "readability":
-        #         df = pd.DataFrame(scores)
-        #     case "semantic_embedding":
-        #         df = pd.DataFrame()
-        #         for column_name, item in embedding_dict.items():
-        #             df[column_name] = item
-        #     case "all":
-        #         df = pd.DataFrame()
-        #         for score_name, score_value in red_scores.items():
-        #             df[score_name] = [score_value]
-        #         print(embedding_dict)
-        #         for column_name, item in embedding_dict.items():
-
-        #             df[column_name] = [item[-1]]
-        # df["original_texts"] = raw_texts
-        # df["simplified_texts"] = new_texts
-        # df["titles"] = titles
-
     df = pd.DataFrame(dict_list)
-    breakpoint()
     df.to_json("results/results.json")

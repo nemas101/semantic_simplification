@@ -1,9 +1,12 @@
+"""Replacement of word with their WordNet hypernyms
+Searches for hypernyms on WorNet using similarities from SpaCy
+Replaces words with the best-fitting hypernym
+"""
+
 import re
 
 import spacy
 from nltk.corpus import wordnet as wn
-
-# from tqdm.auto import tqdm
 
 
 # create filtered synsets
@@ -16,7 +19,6 @@ def get_synsets(word: spacy.tokens.token.Token, pos_tag_dict: dict):
     return wordnet_synsets
 
 
-# filter out best synset
 def find_best_synset(
     document: spacy.tokens.doc.Doc, sentence: spacy.tokens.span.Span, list_of_synsets
 ):
@@ -33,6 +35,8 @@ def find_best_synset(
         best_synset = list_of_synsets[synset_index]
     else:
         best_synset = list_of_synsets[0]
+    
+    # for testing:
     # print("find_best_synset: ", best_synset, max_sim)
     return best_synset
 
@@ -43,6 +47,8 @@ def alternate_best_hypernym(synset):
     max_sim = max(similarities)
     synset_index = similarities.index(max_sim)
     best_hypernym = hypernyms[synset_index]
+
+    # for testing:
     # print("alternate_best_hypernym: ", best_hypernym, max_sim)
     return best_hypernym
 

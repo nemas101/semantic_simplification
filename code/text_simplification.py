@@ -1,15 +1,27 @@
+"""Simplifies a given text
+Simplification done by
+1. removal of adjectives
+2. removal of adverbs
+3. replacement of complex words with their hypernyms
+"""
+
 import argparse
 import os
 import re
 
 import pandas as pd
 import spacy
-from hypernymReplacement import replace_with_hypernym
+from hypernym_replacement import replace_with_hypernym
 from spacy.matcher import Matcher
 from tqdm.auto import tqdm
 
 
 def spacyfy_text(text: str) -> list[str]:
+    """Chunks text and returns sentences
+
+    Input: text(str)
+    Output: list of sentences list(str)
+    """
     n = 99999  # set for spacys maximal text limit
     chunks = [text[i : i + n] for i in range(0, len(text), n)]
     sentences = []
@@ -82,7 +94,6 @@ def replace_words(document: str, removal_dict: dict) -> str:
     Input: document (str), removal dict(items: old_string, values: replacement_string)
 
     Output: replacement_document(str)"""
-
     replacement_document = document
 
     for key, value in removal_dict.items():
@@ -92,7 +103,10 @@ def replace_words(document: str, removal_dict: dict) -> str:
 
 
 def clean_whitespaces(text: str) -> str:
-    """Cleans the document of whitespaces and doubled commas"""
+    """Cleans the document of whitespaces and doubled commas
+
+    Input: text(str)
+    Output: cleaned_text(str)"""
     single_whitespaces = re.sub(r" {2,}", " ", text)
 
     # remove whitespaces around full stops
@@ -104,6 +118,11 @@ def clean_whitespaces(text: str) -> str:
 
 
 def clean_determiners(text: str) -> str:
+    """Fixes the determiner problem from the replacements
+
+    Input: text(str) to clean
+    Output: text_clean(str) cleaned with the right determiners
+    """
     pattern_a = re.compile(r" a(?= ([aeiou]))", flags=re.MULTILINE)
     pattern_an = re.compile(r" an(?= ([^aeiou]))", flags=re.MULTILINE)
 
@@ -131,12 +150,10 @@ if __name__ == "__main__":
     else:
         texts = [args.text]
 
-    c1_vocab = pd.read_csv("code/octanove-vocabulary-profile-c1c2-1.0.csv")
-    simple_vocab_list = pd.read_csv("code/cefrj-vocabulary-profile-1.5.csv")
+    c1_vocab = pd.read_csv("code/resources/octanove-vocabulary-profile-c1c2-1.0.csv")
+    simple_vocab_list = pd.read_csv("code/resources/cefrj-vocabulary-profile-1.5.csv")
     b2_vocab = simple_vocab_list[simple_vocab_list["CEFR"] == "B2"]["headword"]
 
-    # word lists gotten from https://raw.githubusercontent.com/openlanguageprofiles/olp-en-cefrj/refs/heads/master/cefrj-vocabulary-profile-1.5.csv
-    # https://github.com/openlanguageprofiles/olp-en-cefrj
     complex_word_list = list(c1_vocab["headword"])
     complex_word_list.extend(list(b2_vocab))
 
@@ -155,9 +172,11 @@ if __name__ == "__main__":
         # remove adjectives and adverbs
         replacement_doc = replace_words(doc.text, dict_adjectives)
         replacement_doc = replace_words(replacement_doc, list_adverbs)
+
         # replace complex words
         new_document = nlp(replacement_doc)
         hypernym_doc = replace_with_hypernym(complex_word_list, new_document)
+
         # clean document
         clean_document = clean_whitespaces(hypernym_doc)
         clean_document = clean_determiners(clean_document)

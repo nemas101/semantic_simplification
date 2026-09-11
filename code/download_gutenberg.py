@@ -16,13 +16,13 @@ def download_book(row):
 
 
 if __name__ == "__main__":
-    df = pd.read_csv("books_gutenberg.csv")
+    df = pd.read_csv("code/resources/books_gutenberg.csv")
 
     df["url"] = [f"https://gutenberg.org/cache/epub/{x}/pg{x}.txt" for x in df["id_number"]] # save right urls for download
     # make path for the prepared data
     os.makedirs("text/raw/", exist_ok=True)
 
-    print("Downloading the Top 100 engish books from gutenberg.org")
+    print("Downloading the Top 100 English books from gutenberg.org")
 
     for row in df.itertuples():
         download_book(row)

@@ -5,7 +5,7 @@ import re
 from tqdm.auto import tqdm
 
 
-def delete_beginning(text):
+def delete_beginning(text:str) -> str:
     """Deletes the additional information text at the beginning provided by gutenberg.org"""
     beginning_text_index = text.index(
         [i for i in text if re.findall(r"\*\*\* START OF THE PROJECT GUTENBERG", i)][0]
@@ -14,7 +14,7 @@ def delete_beginning(text):
     return text_cleared_beg
 
 
-def delete_end(text):
+def delete_end(text:str) -> str:
     """Deletes the additional information text at the end provided by gutenberg.org"""
     end_text_index = text.index(
         [i for i in text if re.findall(r"\*\*\* END OF THE PROJECT GUTENBERG", i)][0]
@@ -23,14 +23,14 @@ def delete_end(text):
     return text_cleared_end
 
 
-# remove emtpy lines too?
-def remove_empty_spaces(text_lines):
+
+def remove_empty_spaces(text_lines:list[str]) -> list[str]:
     stripped_lines = [line.strip() for line in text_lines]
     cleaned_lines = [line for line in stripped_lines if len(line) != 0]
     return cleaned_lines
 
 
-def remove_newlines(text_lines):
+def remove_newlines(text_lines:list[str]) -> list[str]:
     fulltext = " ".join(text_lines)
     sentences = fulltext.split(".")
     cleaned_sentences = [sentence.replace("\n", " ") for sentence in sentences]
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--text",
         required=False,
-        help="Input is the title of the text in the text folder, default is all in the folder",
+        help="Input is the name of the txt-file in the text folder, default is all in the folder",
         default="all"
     )
     args = parser.parse_args()
@@ -55,10 +55,6 @@ if __name__ == "__main__":
         texts = args.text.split()
 
     for text in tqdm(texts):
-        # if "by" not in text:
-        #     title = "Unknown"
-        # else:
-        #     title = text.split("by")[0].strip()
         with open(f"text/raw/{text}", "r") as f:
             text_lines = f.readlines()
 
